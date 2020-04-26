@@ -1,26 +1,18 @@
 package com.manickchand.mlkitsample
 
-import android.graphics.*
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
-import com.google.firebase.ml.vision.face.FirebaseVisionFace
-import com.google.firebase.ml.vision.face.FirebaseVisionFaceContour
-import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions
-import com.manickchand.mlkitsample.util.MyPaints
 import com.otaliastudios.cameraview.controls.Facing
 import com.otaliastudios.cameraview.frame.Frame
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    private val faceList = ArrayList<FirebaseVisionFace>()
-
-    private val myPaints = MyPaints()
+    private val faceContoursDetection = FaceContoursDetection()
 
     companion object{
         const val TAG_DEBUG = "MLKITSAMPLE"
@@ -52,44 +44,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun recognizeFace(frame: Frame){
-
         val fImage = convertFrameToFVI(frame)
-        detectFaces(fImage)
-
-        val bitmap = fImage.bitmap
-        val canvas = Canvas(bitmap)
-
-        for(face in this.faceList){
-
-            for(point in face.getContour(FirebaseVisionFaceContour.FACE).points){
-                canvas.drawCircle(point.x, point.y, CIRCLE_FACE_RADIUS, myPaints.paintFace)
-            }
-            for(point in face.getContour(FirebaseVisionFaceContour.LEFT_EYE).points){
-                canvas.drawCircle(point.x, point.y, CIRCLE_FACE_RADIUS, myPaints.paintEye)
-            }
-            for(point in face.getContour(FirebaseVisionFaceContour.RIGHT_EYE).points){
-                canvas.drawCircle(point.x, point.y, CIRCLE_FACE_RADIUS, myPaints.paintEye)
-            }
-
-            for(point in face.getContour(FirebaseVisionFaceContour.LOWER_LIP_BOTTOM).points){
-                canvas.drawCircle(point.x, point.y, CIRCLE_FACE_RADIUS, myPaints.paintLip);
-            }
-
-            for(point in face.getContour(FirebaseVisionFaceContour.UPPER_LIP_TOP).points){
-                canvas.drawCircle(point.x, point.y, CIRCLE_FACE_RADIUS, myPaints.paintLip)
-            }
-
-            if(face.smilingProbability>0.6){
-                canvas.drawText("smiling",face.boundingBox.left.toFloat(),face.boundingBox.top.toFloat(),myPaints.paintText)
-            }
-
-            canvas.drawRect(RectF(face.boundingBox), myPaints.paintRectFace)
-        }
-
+        val bitmap = faceContoursDetection.recognizeFace(fImage)
         imageView.setImageBitmap(bitmap)
-
-        this.faceList.clear()
-
     }
 
     private fun recognizeText(frame: Frame){
@@ -111,30 +68,6 @@ class MainActivity : AppCompatActivity() {
         return FirebaseVisionImage.fromByteArray(frame.getData(), frameMetadata.build())
     }
 
-    private fun detectFaces(image: FirebaseVisionImage) {
-
-        val options = FirebaseVisionFaceDetectorOptions.Builder()
-            .setClassificationMode(FirebaseVisionFaceDetectorOptions.ACCURATE) //	FAST  | ACCURATE
-            .setContourMode(FirebaseVisionFaceDetectorOptions.ALL_CONTOURS) // NO_CONTOURS | ALL_CONTOURS
-            .setClassificationMode(FirebaseVisionFaceDetectorOptions.ALL_CLASSIFICATIONS) //NO_CLASSIFICATIONS | ALL_CLASSIFICATIONS
-            .setMinFaceSize(0.15f) //default 0.1f
-            .enableTracking()
-            .build()
-
-        val detector = FirebaseVision.getInstance()
-            .getVisionFaceDetector(options)
-
-        val result = detector.detectInImage(image)
-            .addOnSuccessListener { faces ->
-
-                faceList.addAll(faces)
-
-            }
-            .addOnFailureListener { e ->
-                e.printStackTrace()
-            }
-
-    }
 
     private fun detectText(image: FirebaseVisionImage){
 
