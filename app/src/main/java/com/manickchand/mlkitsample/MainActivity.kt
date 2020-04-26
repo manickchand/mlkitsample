@@ -19,19 +19,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
 
     private val faceContoursDetection = FaceContoursDetection()
-    private val detectorText = FirebaseVision.getInstance().onDeviceTextRecognizer
-    private val detectorQrcode:FirebaseVisionBarcodeDetector
-
-    init {
-
-        // configure barcode type, only qrcode
-        val options = FirebaseVisionBarcodeDetectorOptions.Builder()
-            .setBarcodeFormats(FirebaseVisionBarcode.FORMAT_QR_CODE)
-            .build()
-
-        detectorQrcode = FirebaseVision.getInstance()
-            .getVisionBarcodeDetector(options)
-    }
 
     companion object{
         const val TAG_DEBUG = "MLKITSAMPLE"
@@ -129,6 +116,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun detectText(image: FirebaseVisionImage){
 
+        val detectorText = FirebaseVision.getInstance().onDeviceTextRecognizer
+
         val result = detectorText.processImage(image)
             .addOnSuccessListener { firebaseVisionText ->
                 tv_recognized.text = firebaseVisionText.text
@@ -139,6 +128,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun detectBarCode(image: FirebaseVisionImage){
+
+        val options = FirebaseVisionBarcodeDetectorOptions.Builder()
+            .setBarcodeFormats(FirebaseVisionBarcode.FORMAT_QR_CODE)
+            .build()
+
+        val detectorQrcode = FirebaseVision.getInstance()
+            .getVisionBarcodeDetector(options)
 
         val result = detectorQrcode.detectInImage(image)
             .addOnSuccessListener { barcodes ->
