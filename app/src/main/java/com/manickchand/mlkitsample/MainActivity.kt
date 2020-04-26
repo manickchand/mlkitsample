@@ -6,6 +6,9 @@ import android.view.View
 import android.widget.RadioButton
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.ml.vision.FirebaseVision
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata.IMAGE_FORMAT_NV21
@@ -16,13 +19,25 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
 
     private val faceContoursDetection = FaceContoursDetection()
+    private val detectorText = FirebaseVision.getInstance().onDeviceTextRecognizer
+    private val detectorQrcode:FirebaseVisionBarcodeDetector
+
+    init {
+
+        // configure barcode type, only qrcode
+        val options = FirebaseVisionBarcodeDetectorOptions.Builder()
+            .setBarcodeFormats(FirebaseVisionBarcode.FORMAT_QR_CODE)
+            .build()
+
+        detectorQrcode = FirebaseVision.getInstance()
+            .getVisionBarcodeDetector(options)
+    }
 
     companion object{
         const val TAG_DEBUG = "MLKITSAMPLE"
         const val CIRCLE_FACE_RADIUS = 2.0f
         var isFrontCamera = true
         var RADIO_SELECTED = 0
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,21 +66,19 @@ class MainActivity : AppCompatActivity() {
     private fun recognizeFrame(frame: Frame){
         val fImage = convertFrameToFVI(frame)
 
-        var bitmap = fImage.bitmap
-
         when(RADIO_SELECTED){
             0 -> {
-                bitmap = faceContoursDetection.recognizeFace(fImage)
+                val bitmap = faceContoursDetection.recognizeFace(fImage)
+                imageView.setImageBitmap(bitmap)
             }
             1 -> {
                 detectText(fImage)
             }
             2 -> {
-                //
+                detectBarCode(fImage)
             }
         }
 
-        imageView.setImageBitmap(bitmap)
     }
 
 
@@ -74,10 +87,11 @@ class MainActivity : AppCompatActivity() {
         val frameMetadata = FirebaseVisionImageMetadata.Builder()
             .setWidth(frame.size.width)
             .setHeight(frame.size.height)
-            .setFormat(IMAGE_FORMAT_NV21)
+            .setFormat(IMAGE_FORMAT_NV21) //format to text and qrcode
             .setRotation(FirebaseVisionImageMetadata.ROTATION_270)
 
-        //if(RADIO_SELECTED==0)frameMetadata.setFormat(frame.format)
+        //formate to face detector
+        if(RADIO_SELECTED==0)frameMetadata.setFormat(frame.format)
 
         //back camera
         if(!isFrontCamera) frameMetadata.setRotation(FirebaseVisionImageMetadata.ROTATION_90)
@@ -94,31 +108,49 @@ class MainActivity : AppCompatActivity() {
                 R.id.radio_face ->
                     if (checked) {
                         RADIO_SELECTED = 0
+                        imageView.visibility = View.VISIBLE
                     }
                 R.id.radio_text ->
                     if (checked) {
                         RADIO_SELECTED = 1
+                        imageView.visibility = View.GONE
                     }
                 R.id.radio_code ->
                     if (checked) {
                         RADIO_SELECTED = 2
+                        imageView.visibility = View.GONE
                     }
-
             }
+
+            Log.i(TAG_DEBUG, "RADIO_SELECTED = $RADIO_SELECTED")
         }
     }
 
 
     private fun detectText(image: FirebaseVisionImage){
 
-        val detector = FirebaseVision.getInstance().onDeviceTextRecognizer
-
-        val result = detector.processImage(image)
+        val result = detectorText.processImage(image)
             .addOnSuccessListener { firebaseVisionText ->
                 tv_recognized.text = firebaseVisionText.text
             }
             .addOnFailureListener { e ->
-                e.printStackTrace()
+                Log.e(TAG_DEBUG, "Error detect text ${e.message}")
+            }
+    }
+
+    private fun detectBarCode(image: FirebaseVisionImage){
+
+        val result = detectorQrcode.detectInImage(image)
+            .addOnSuccessListener { barcodes ->
+
+                //TODO more than one
+                barcodes.forEach{code ->
+                    tv_recognized.text = code.rawValue
+                }
+
+            }
+            .addOnFailureListener {
+                Log.e(TAG_DEBUG, "Error detect qrcode ${it.message}")
             }
     }
 }

@@ -89,6 +89,7 @@ class FaceContoursDetection {
 
     fun stopFaceContours(){
         this.detector.close()
+        this.faceList.clear()
     }
 
 }

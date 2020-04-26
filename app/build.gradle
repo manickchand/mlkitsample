@@ -36,6 +36,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics:17.2.2'
     implementation 'com.google.firebase:firebase-ml-vision:24.0.0'
     implementation 'com.google.firebase:firebase-ml-vision-face-model:19.0.0'
+    implementation 'com.google.firebase:firebase-ml-vision-barcode-model:16.0.1'
 
     implementation 'com.otaliastudios:cameraview:2.6.2'
 }
