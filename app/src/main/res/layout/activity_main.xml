@@ -46,15 +46,48 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/btnFace"
+    <RadioGroup
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Face"
+        android:orientation="vertical"
         android:layout_marginBottom="16dp"
+        android:layout_marginLeft="16dp"
         app:layout_constraintBottom_toBottomOf="@+id/cameraView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent">
+
+        <RadioButton
+            android:id="@+id/radio_face"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/radio_background"
+            android:padding="8dp"
+            android:layout_marginBottom="4dp"
+            android:textColor="@android:color/white"
+            android:onClick="onRadioButtonClicked"
+            android:checked="true"
+            android:text="Face" />
+
+            <RadioButton android:id="@+id/radio_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/radio_background"
+                android:padding="8dp"
+                android:layout_marginBottom="4dp"
+                android:textColor="@android:color/white"
+                android:onClick="onRadioButtonClicked"
+                android:text="Text"
+                />
+
+            <RadioButton android:id="@+id/radio_code"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/radio_background"
+                android:padding="8dp"
+                android:textColor="@android:color/white"
+                android:onClick="onRadioButtonClicked"
+                android:text="Code"
+                />
+        </RadioGroup>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
